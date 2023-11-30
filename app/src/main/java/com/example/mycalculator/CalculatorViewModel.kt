@@ -9,12 +9,39 @@ class CalculatorViewModel : ViewModel() {
     var calculatorState by mutableStateOf(CalculatorState())
         private set
 
+
+
+    // Пример логики обработки ввода для оператора
+    fun onOperatorClick(operator: CalculatorOperation) {
+        if (calculatorState.number1.isNotEmpty() && calculatorState.operation == null) {
+            // Если есть первое число и нет оператора, устанавливаем оператор
+            calculatorState = calculatorState.copy(operation = operator)
+        } else if (calculatorState.number1.isNotEmpty() && calculatorState.operation != null && calculatorState.number2.isNotEmpty()) {
+            // Если есть второе число, оператор и введенное число, вычисляем результат
+            performCalculation()
+            // Затем устанавливаем новый оператор
+            calculatorState = calculatorState.copy(operation = operator, number2 = "")
+        } else if (calculatorState.number1.isNotEmpty() && calculatorState.operation != null && calculatorState.number2.isEmpty()) {
+            // Если есть второе число, но еще не введенное число, заменяем оператор
+            calculatorState = calculatorState.copy(operation = operator)
+        }
+    }
+
+    fun onNumberClick(number: Int) {
+        if (calculatorState.operation == null) {
+            // Если нет оператора, обновляем первое число
+            calculatorState = calculatorState.copy(number1 = calculatorState.number1 + number)
+        } else {
+            // Если есть оператор, обновляем второе число
+            calculatorState = calculatorState.copy(number2 = calculatorState.number2 + number)
+        }
+    }
     fun onAction(calculatorAction: CalculatorAction) {
         when (calculatorAction) {
-            is CalculatorAction.Number -> enterNumber(calculatorAction.number)
+            is CalculatorAction.Number -> onNumberClick(calculatorAction.number)
             is CalculatorAction.Decimal -> enterDecimal()
             is CalculatorAction.Clear -> calculatorState = CalculatorState()
-            is CalculatorAction.Operation -> enterOperation(calculatorAction.operation)
+            is CalculatorAction.Operation -> onOperatorClick(calculatorAction.operation)
             is CalculatorAction.Calculate -> performCalculation()
             is CalculatorAction.Delete -> performDeletion()
         }

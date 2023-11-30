@@ -21,6 +21,17 @@ import androidx.compose.ui.unit.sp
 import com.example.mycalculator.ui.theme.LightGray
 import com.example.mycalculator.ui.theme.Orange
 
+
+private fun buildExpressionText(state: CalculatorState): String {
+    val number1 = state.number1
+    val operationSymbol = state.operation?.symbol ?: ""
+    val number2 = state.number2
+
+    // Формируем выражение на основе состояния
+    return "$number1$operationSymbol$number2"
+}
+
+
 @Composable
 fun Calculator(
     modifier: Modifier = Modifier,
@@ -35,17 +46,19 @@ fun Calculator(
                 .align(Alignment.BottomCenter),
             verticalArrangement = Arrangement.spacedBy(buttonSpacing)
         ) {
+
             Text(
-                text = state.number1 + (state.operation?.symbol ?: "") + state.number2,
+                text = buildExpressionText(state),
                 textAlign = TextAlign.End,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 32.dp),
-                fontWeight =  FontWeight.Light,
+                fontWeight = FontWeight.Light,
                 fontSize = 80.sp,
                 color = Color.White,
                 maxLines = 2
             )
+
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(buttonSpacing)
