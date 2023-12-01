@@ -4,44 +4,69 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import java.math.BigDecimal
 
 class CalculatorViewModel : ViewModel() {
     var calculatorState by mutableStateOf(CalculatorState())
         private set
 
-
-
-    // Пример логики обработки ввода для оператора
-    fun onOperatorClick(operator: CalculatorOperation) {
+    private fun enterOperation(operator: CalculatorOperation) {
+        if (calculatorState.number1.length >= MAX_NUM_LENGTH) {
+            return
+        }
         if (calculatorState.number1.isNotEmpty() && calculatorState.operation == null) {
-            // Если есть первое число и нет оператора, устанавливаем оператор
             calculatorState = calculatorState.copy(operation = operator)
+
+
         } else if (calculatorState.number1.isNotEmpty() && calculatorState.operation != null && calculatorState.number2.isNotEmpty()) {
-            // Если есть второе число, оператор и введенное число, вычисляем результат
             performCalculation()
-            // Затем устанавливаем новый оператор
-            calculatorState = calculatorState.copy(operation = operator, number2 = "")
+            calculatorState = if (calculatorState.number1.length < MAX_NUM_LENGTH - 1) {
+                calculatorState.copy(operation = operator, number2 = "")
+
+
+            } else {
+                calculatorState.copy(operation = null, number2 = "")
+            }
+
         } else if (calculatorState.number1.isNotEmpty() && calculatorState.operation != null && calculatorState.number2.isEmpty()) {
-            // Если есть второе число, но еще не введенное число, заменяем оператор
             calculatorState = calculatorState.copy(operation = operator)
         }
     }
 
-    fun onNumberClick(number: Int) {
-        if (calculatorState.operation == null) {
-            // Если нет оператора, обновляем первое число
-            calculatorState = calculatorState.copy(number1 = calculatorState.number1 + number)
+    private fun enterNumber(number: Int) {
+        val currentNumber = if (calculatorState.operation == null) {
+            calculatorState.number1
         } else {
-            // Если есть оператор, обновляем второе число
-            calculatorState = calculatorState.copy(number2 = calculatorState.number2 + number)
+            calculatorState.number2
+        }
+
+        val updatedNumber = when {
+            currentNumber == "0" -> number.toString()
+            currentNumber.startsWith("0") && currentNumber != "0" -> {
+                if (currentNumber.contains('.')) {
+                    currentNumber + number
+                } else {
+                    currentNumber.substring(1) + number
+                }
+            }
+            else -> currentNumber + number
+        }
+
+        calculatorState = if (calculatorState.operation == null) {
+            calculatorState.copy(number1 = updatedNumber)
+        } else {
+            calculatorState.copy(number2 = updatedNumber)
         }
     }
+
+
+
     fun onAction(calculatorAction: CalculatorAction) {
         when (calculatorAction) {
-            is CalculatorAction.Number -> onNumberClick(calculatorAction.number)
+            is CalculatorAction.Number -> enterNumber(calculatorAction.number)
             is CalculatorAction.Decimal -> enterDecimal()
             is CalculatorAction.Clear -> calculatorState = CalculatorState()
-            is CalculatorAction.Operation -> onOperatorClick(calculatorAction.operation)
+            is CalculatorAction.Operation -> enterOperation(calculatorAction.operation)
             is CalculatorAction.Calculate -> performCalculation()
             is CalculatorAction.Delete -> performDeletion()
         }
@@ -64,8 +89,8 @@ class CalculatorViewModel : ViewModel() {
     }
 
     private fun performCalculation() {
-        val number1 = calculatorState.number1.toDoubleOrNull()
-        val number2 = calculatorState.number2.toDoubleOrNull()
+        val number1 = calculatorState.number1.toBigDecimalOrNull()
+        val number2 = calculatorState.number2.toBigDecimalOrNull()
         if (number1 != null && number2 != null) {
             val result = when (calculatorState.operation) {
                 is CalculatorOperation.Add -> number1 + number2
@@ -75,9 +100,10 @@ class CalculatorViewModel : ViewModel() {
                 null -> return
             }
 
-            var resultAsString = formatDouble(result).take(8)
 
-            if (resultAsString.length >= MAX_NUM_LENGTH+1) resultAsString = "Error"
+            val resultAsString = formatDouble(result).take(15)
+
+//            if (resultAsString.length >= MAX_NUM_LENGTH) resultAsString = "Error"
 
             calculatorState = calculatorState.copy(
                 number1 = resultAsString,
@@ -87,14 +113,6 @@ class CalculatorViewModel : ViewModel() {
         }
     }
 
-    private fun enterOperation(operation: CalculatorOperation) {
-        if (calculatorState.number1.length >= MAX_NUM_LENGTH) {
-            return
-        }
-        if (calculatorState.number1.isNotBlank()) {
-            calculatorState = calculatorState.copy(operation = operation)
-        }
-    }
 
     private fun enterDecimal() {
         if (calculatorState.operation == null && !calculatorState.number1.contains(".")
@@ -115,25 +133,7 @@ class CalculatorViewModel : ViewModel() {
         }
     }
 
-    private fun enterNumber(number: Int) {
-        if (calculatorState.operation == null) {
-            if (calculatorState.number1.length >= MAX_NUM_LENGTH) {
-                return
-            }
-            calculatorState = calculatorState.copy(
-                number1 = calculatorState.number1 + number
-            )
-            return
-        }
-        if (calculatorState.number2.length >=(MAX_NUM_LENGTH-calculatorState.number1.length-1)) {
-            return
-        }
-        calculatorState = calculatorState.copy(
-            number2 = calculatorState.number2 + number
-        )
-    }
-
-    private fun formatDouble(number: Double): String {
+    private fun formatDouble(number: BigDecimal): String {
         val formatted = number.toString()
         return if (formatted.endsWith(".0")) {
             formatted.substring(0, formatted.length - 2)
@@ -144,6 +144,6 @@ class CalculatorViewModel : ViewModel() {
 
 
     companion object {
-        private const val MAX_NUM_LENGTH = 8
+        private const val MAX_NUM_LENGTH = 18
     }
 }

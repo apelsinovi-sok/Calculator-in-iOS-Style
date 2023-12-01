@@ -1,4 +1,4 @@
-package com.example.mycalculator
+package com.example.mycalculator.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -18,18 +18,15 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.mycalculator.CalculatorAction
+import com.example.mycalculator.CalculatorButton
+import com.example.mycalculator.CalculatorOperation
+import com.example.mycalculator.CalculatorState
+import com.example.mycalculator.calculateTextSize
 import com.example.mycalculator.ui.theme.LightGray
 import com.example.mycalculator.ui.theme.Orange
 
 
-private fun buildExpressionText(state: CalculatorState): String {
-    val number1 = state.number1
-    val operationSymbol = state.operation?.symbol ?: ""
-    val number2 = state.number2
-
-    // Формируем выражение на основе состояния
-    return "$number1$operationSymbol$number2"
-}
 
 
 @Composable
@@ -47,14 +44,17 @@ fun Calculator(
             verticalArrangement = Arrangement.spacedBy(buttonSpacing)
         ) {
 
+            val text = state.number1 + (state.operation?.symbol ?: "") + state.number2
+            val textSize = calculateTextSize(text)
+
             Text(
-                text = buildExpressionText(state),
+                text = text ,
                 textAlign = TextAlign.End,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(vertical = 32.dp),
                 fontWeight = FontWeight.Light,
-                fontSize = 80.sp,
+                fontSize = textSize.sp,
                 color = Color.White,
                 maxLines = 2
             )
